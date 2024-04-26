@@ -1,0 +1,42 @@
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+const mongoose = require("mongoose");
+const port = 7000;
+const authRouter = require("./routes/auth");
+const messageRouter = require('./routes/messages');
+const conversationRouter = require('./routes/conversations');
+var cors = require("cors");
+app.use(cors());
+app.use(express.json());
+
+const connectToMongoose = require("./DB/db");
+connectToMongoose();
+
+app.use('/api/users', authRouter);
+app.use('/api/conversations', conversationRouter);
+app.use('/api/messages', messageRouter);
+
+io.on('connection', (socket) => {
+    console.log(`User connected: ${socket.id}`);
+
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.id}`);
+    });
+
+    // Add your socket event handlers here
+});
+
+app.get('/', (req, res) => {
+    res.send('Hello World!')
+});
+
+const PORT = process.env.PORT || 7000;
+server.listen(PORT, () => {
+    console.log(`Example app listening on port ${PORT}`);
+});
